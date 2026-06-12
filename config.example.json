@@ -1,0 +1,5 @@
+{
+  "claude_api_key": "your-api-key-here",
+  "notes_dir": "notes",
+  "auto_generate_index": true
+}

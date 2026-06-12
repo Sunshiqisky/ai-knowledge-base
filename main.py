@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scripts'))
 from search import list_notes, search_notes
 from find_related import find_related
 from generate_index import generate_index
+from ingest import ingest_url
 
 NOTES_DIR = 'notes'
 
@@ -33,7 +34,8 @@ def print_menu():
     print("  3. 查看笔记关联")
     print("  4. 生成索引")
     print("  5. 添加新笔记")
-    print("  6. 查看使用帮助")
+    print("  6. 从链接导入（Ingest）")
+    print("  7. 查看使用帮助")
     print("  0. 退出")
     print()
 
@@ -195,6 +197,31 @@ title: {title}
     print("\n请用文本编辑器打开，补充摘要和要点。")
     input("\n按回车键返回主菜单...")
 
+def ingest_url_interactive():
+    """从链接导入笔记"""
+    print("\n【从链接导入笔记】\n")
+    url = input("请输入链接：").strip()
+
+    if not url:
+        print("链接不能为空。")
+        input("\n按回车键返回主菜单...")
+        return
+
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+
+    print()
+    filepath = ingest_url(url, NOTES_DIR)
+
+    if filepath:
+        print(f"\n导入成功！")
+        print(f"文件位置：{os.path.abspath(filepath)}")
+        print("\n请用文本编辑器打开，补充或修改内容。")
+    else:
+        print("\n导入失败，请检查链接是否正确。")
+
+    input("\n按回车键返回主菜单...")
+
 def show_help():
     """显示帮助信息"""
     print("\n【使用帮助】\n")
@@ -205,7 +232,8 @@ def show_help():
     print("  2. 搜索笔记 - 按关键词搜索笔记内容")
     print("  3. 查看笔记关联 - 找到与某篇笔记相关的其他笔记")
     print("  4. 生成索引 - 自动生成笔记目录")
-    print("  5. 添加新笔记 - 创建新的笔记文件")
+    print("  5. 添加新笔记 - 手动创建新的笔记文件")
+    print("  6. 从链接导入 - 输入链接，自动生成笔记（需要网络）")
     print()
     print("笔记格式：")
     print("  - 笔记存储在 notes/ 目录")
@@ -240,6 +268,8 @@ def main():
         elif choice == '5':
             add_note_interactive()
         elif choice == '6':
+            ingest_url_interactive()
+        elif choice == '7':
             show_help()
         elif choice == '0':
             print("\n感谢使用，再见！")

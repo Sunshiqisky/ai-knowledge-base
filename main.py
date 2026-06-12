@@ -11,6 +11,8 @@ from search import list_notes, search_notes
 from find_related import find_related
 from generate_index import generate_index
 from ingest import ingest_url
+from suggest_topics import suggest_topics
+from weekly_report import generate_weekly_report
 
 NOTES_DIR = 'notes'
 
@@ -35,7 +37,9 @@ def print_menu():
     print("  4. 生成索引")
     print("  5. 添加新笔记")
     print("  6. 从链接导入（Ingest）")
-    print("  7. 查看使用帮助")
+    print("  7. 选题推荐")
+    print("  8. 生成周报")
+    print("  9. 查看使用帮助")
     print("  0. 退出")
     print()
 
@@ -222,6 +226,45 @@ def ingest_url_interactive():
 
     input("\n按回车键返回主菜单...")
 
+def suggest_topics_interactive():
+    """选题推荐"""
+    print("\n【选题推荐】\n")
+    print("正在分析笔记，生成选题建议...")
+
+    briefs_dir = os.path.join(os.path.dirname(__file__), 'briefs')
+    os.makedirs(briefs_dir, exist_ok=True)
+
+    from datetime import datetime
+    output_path = os.path.join(briefs_dir, f'{datetime.now().strftime("%Y-%m-%d")}-选题推荐.md')
+
+    suggestions = suggest_topics(NOTES_DIR, output_path)
+
+    if suggestions:
+        print(f"\n共生成 {len(suggestions)} 个选题建议。")
+        print(f"详细报告已保存到: {os.path.abspath(output_path)}")
+        print("\n前 3 个选题：")
+        for i, s in enumerate(suggestions[:3], 1):
+            print(f"  {i}. {s['topic']}")
+            print(f"     理由: {s['reason']}")
+    else:
+        print("\n暂无选题建议，请先添加更多笔记。")
+
+    input("\n按回车键返回主菜单...")
+
+def weekly_report_interactive():
+    """生成周报"""
+    print("\n【生成周报】\n")
+    print("正在分析本周笔记...")
+
+    briefs_dir = os.path.join(os.path.dirname(__file__), 'briefs')
+    os.makedirs(briefs_dir, exist_ok=True)
+
+    output_path = generate_weekly_report(NOTES_DIR, briefs_dir)
+
+    print(f"\n周报已生成！")
+    print(f"文件位置：{os.path.abspath(output_path)}")
+    input("\n按回车键返回主菜单...")
+
 def show_help():
     """显示帮助信息"""
     print("\n【使用帮助】\n")
@@ -234,6 +277,8 @@ def show_help():
     print("  4. 生成索引 - 自动生成笔记目录")
     print("  5. 添加新笔记 - 手动创建新的笔记文件")
     print("  6. 从链接导入 - 输入链接，自动生成笔记（需要网络）")
+    print("  7. 选题推荐 - 基于笔记主题推荐可写选题")
+    print("  8. 生成周报 - 梳理本周入库内容")
     print()
     print("笔记格式：")
     print("  - 笔记存储在 notes/ 目录")
@@ -270,6 +315,10 @@ def main():
         elif choice == '6':
             ingest_url_interactive()
         elif choice == '7':
+            suggest_topics_interactive()
+        elif choice == '8':
+            weekly_report_interactive()
+        elif choice == '9':
             show_help()
         elif choice == '0':
             print("\n感谢使用，再见！")

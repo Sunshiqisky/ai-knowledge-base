@@ -13,6 +13,8 @@ from generate_index import generate_index
 from ingest import ingest_url
 from suggest_topics import suggest_topics
 from weekly_report import generate_weekly_report
+from compile_topics import compile_topics
+from weave_back import weave_back
 
 NOTES_DIR = 'notes'
 
@@ -39,7 +41,9 @@ def print_menu():
     print("  6. 从链接导入（Ingest）")
     print("  7. 选题推荐")
     print("  8. 生成周报")
-    print("  9. 查看使用帮助")
+    print("  9. 编译主题页")
+    print(" 10. 往回织（更新主题页）")
+    print(" 11. 查看使用帮助")
     print("  0. 退出")
     print()
 
@@ -265,6 +269,75 @@ def weekly_report_interactive():
     print(f"文件位置：{os.path.abspath(output_path)}")
     input("\n按回车键返回主菜单...")
 
+def compile_topics_interactive():
+    """编译主题页"""
+    print("\n【编译主题页】\n")
+    print("正在分析笔记，生成主题页...")
+
+    notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
+    wiki_dir = os.path.join(os.path.dirname(__file__), 'wiki')
+
+    generated = compile_topics(notes_dir, wiki_dir)
+
+    if generated:
+        print(f"\n共生成 {len(generated)} 个主题页。")
+        print(f"保存位置: {os.path.abspath(wiki_dir)}")
+    else:
+        print("\n暂无可以编译的主题。")
+        print("提示: 需要有 2 篇以上相同标签的笔记才能生成主题页。")
+
+    input("\n按回车键返回主菜单...")
+
+def weave_back_interactive():
+    """往回织"""
+    print("\n【往回织 - 更新主题页】\n")
+    notes = list_notes(NOTES_DIR)
+
+    if not notes:
+        print("还没有任何笔记。")
+        input("\n按回车键返回主菜单...")
+        return
+
+    print("当前笔记列表：\n")
+    for i, note in enumerate(notes, 1):
+        name = note.replace('.md', '')
+        print(f"  {i}. {name}")
+
+    print()
+    choice = input("请输入要更新的笔记编号（或文件名）：").strip()
+
+    # 处理用户输入
+    target_note = None
+    if choice.isdigit():
+        idx = int(choice) - 1
+        if 0 <= idx < len(notes):
+            target_note = notes[idx]
+        else:
+            print("编号无效。")
+            input("\n按回车键返回主菜单...")
+            return
+    elif choice in notes:
+        target_note = choice
+    elif choice + '.md' in notes:
+        target_note = choice + '.md'
+    else:
+        print("未找到该笔记。")
+        input("\n按回车键返回主菜单...")
+        return
+
+    note_path = os.path.join(NOTES_DIR, target_note)
+    wiki_dir = os.path.join(os.path.dirname(__file__), 'wiki')
+
+    print(f"\n正在更新 {target_note} 相关的主题页...\n")
+    success = weave_back(note_path, NOTES_DIR, wiki_dir)
+
+    if success:
+        print("\n更新完成！")
+    else:
+        print("\n没有需要更新的内容。")
+
+    input("\n按回车键返回主菜单...")
+
 def show_help():
     """显示帮助信息"""
     print("\n【使用帮助】\n")
@@ -279,6 +352,8 @@ def show_help():
     print("  6. 从链接导入 - 输入链接，自动生成笔记（需要网络）")
     print("  7. 选题推荐 - 基于笔记主题推荐可写选题")
     print("  8. 生成周报 - 梳理本周入库内容")
+    print("  9. 编译主题页 - 多篇笔记合并成主题页")
+    print(" 10. 往回织 - 新笔记自动更新相关主题页")
     print()
     print("笔记格式：")
     print("  - 笔记存储在 notes/ 目录")
@@ -319,6 +394,10 @@ def main():
         elif choice == '8':
             weekly_report_interactive()
         elif choice == '9':
+            compile_topics_interactive()
+        elif choice == '10':
+            weave_back_interactive()
+        elif choice == '11':
             show_help()
         elif choice == '0':
             print("\n感谢使用，再见！")
